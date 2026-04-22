@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import SearchIcon from "@/assets/admin/admin_search.svg";
+import EditIcon from "@/assets/admin/admin_edit.svg";
+import DeleteIcon from "@/assets/admin/admin_trash.svg";
 import Image from "next/image";
 
 type Product = {
@@ -13,7 +15,7 @@ type Product = {
   stok: number;
   kategori: string;
   tenant: string;
-  gambarUrl: string | null;
+  gambarUrls: string[];
 };
 
 export default function ProductTable({ produk }: { produk: Product[] }) {
@@ -69,7 +71,7 @@ export default function ProductTable({ produk }: { produk: Product[] }) {
 
       <table className="w-full">
         <thead>
-          <tr className="text-left text-sm text-gray-500 border-b border-gray-100">
+          <tr className="text-left text-sm text-gray-500 border-b border-gray-200">
             <th className="px-6 py-3 font-medium">Nama Produk ↕</th>
             <th className="px-6 py-3 font-medium">Harga ↕</th>
             <th className="px-6 py-3 font-medium">Stok Sisa ↕</th>
@@ -91,7 +93,7 @@ export default function ProductTable({ produk }: { produk: Product[] }) {
             filtered.map((p) => (
               <tr
                 key={p.id}
-                className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
+                className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
               >
                 <td className="px-6 py-4 text-sm text-gray-800">
                   {p.namaProduct}
@@ -119,14 +121,14 @@ export default function ProductTable({ produk }: { produk: Product[] }) {
                       href={`/admin/produk/${p.id}/edit`}
                       className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors text-sm"
                     >
-                      ✏️
+                        <Image src={EditIcon} alt="Edit" width={16} height={16} />
                     </Link>
                     <button
                       onClick={() => handleDelete(p.id)}
                       disabled={deleting === p.id}
-                      className="p-2 rounded-lg hover:bg-red-50 text-gray-500 hover:text-red-500 transition-colors text-sm disabled:opacity-40"
+                      className="p-2 rounded-lg cursor-pointer hover:bg-red-50 text-gray-500 hover:text-red-500 transition-colors text-sm disabled:opacity-40"
                     >
-                      🗑️
+                      <Image src={DeleteIcon} alt="Delete" width={16} height={16} />
                     </button>
                   </div>
                 </td>

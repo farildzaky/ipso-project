@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
 import ProductTable from "./_components/ProductTable";
 
 export default async function AdminProdukPage() {
