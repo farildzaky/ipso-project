@@ -16,6 +16,7 @@ export default async function ProfilPage() {
       email: true,
       noTelepon: true,
       alamat: true,
+      image: true,
     },
   });
 
@@ -23,13 +24,11 @@ export default async function ProfilPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
-      {/* Breadcrumb */}
       <p className="text-sm text-gray-400 mb-6">
         Home / <span className="text-gray-800 font-medium">My Profile</span>
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-6">
-        {/* Sidebar */}
         <div className="bg-white border border-gray-100 rounded-xl p-2 h-fit">
           <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-blue-50 text-[#1a3a5c] font-medium text-sm">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -39,7 +38,6 @@ export default async function ProfilPage() {
           </div>
         </div>
 
-        {/* Card profil */}
         <div className="bg-white border border-gray-100 rounded-xl p-6 md:p-8">
           <h2 className="text-xl font-semibold text-gray-900 pb-5 border-b border-gray-100 mb-6">
             Profile Details
