@@ -35,7 +35,36 @@ export default function LoginForm() {
       return;
     }
 
+    async function handleSubmit(e: React.FormEvent) {
+  e.preventDefault();
+  setError("");
+  setLoading(true);
+
+  const res = await signIn("credentials", {
+    email: form.email,
+    password: form.password,
+    redirect: false,
+  });
+
+  setLoading(false);
+
+  if (res?.error) {
+    setError("Email atau password salah.");
+    return;
+  }
+
+  // Cek role setelah login
+  const sessionRes = await fetch("/api/auth/session");
+  const session = await sessionRes.json();
+
+  if (session?.user?.role === "admin") {
+    router.push("/admin");
+  } else {
     router.push("/katalog");
+  }
+
+  router.refresh();
+}
     router.refresh();
   }
 
