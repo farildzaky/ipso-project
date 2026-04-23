@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 type Produk = {
   id: number;
@@ -33,15 +34,78 @@ export default function ProductDetailClient({
   similar,
 }: {
   produk: Produk;
-  similar: SimilarItem[]; 
+  similar: SimilarItem[];
 }) {
   const router = useRouter();
+  const { data: session } = useSession();
   const [mainImage, setMainImage] = useState(produk.gambarUrls[0] ?? null);
-  const [qty, setQty] = useState(2); 
+  const [qty, setQty] = useState(1);
   const [offset, setOffset] = useState(0);
+  const [isLoadingCart, setIsLoadingCart] = useState(false);
+  const [cartMessage, setCartMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const hargaNum = Number(produk.harga);
   const sideImages = produk.gambarUrls.slice(1, 3);
+
+  const handleAddToCart = async () => {
+    if (!session) {
+      router.push("/login");
+      return;
+    }
+
+    setIsLoadingCart(true);
+    setCartMessage(null);
+
+    try {
+      const response = await fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: produk.id, qty }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        setCartMessage({ type: "error", text: data.error || "Failed to add to cart" });
+        return;
+      }
+
+      setCartMessage({ type: "success", text: "Added to cart successfully!" });
+      setQty(1);
+      setTimeout(() => setCartMessage(null), 3000);
+    } catch (error) {
+      setCartMessage({ type: "error", text: "Failed to add to cart" });
+    } finally {
+      setIsLoadingCart(false);
+    }
+  };
+
+  const handleBuyNow = async () => {
+    if (!session) {
+      router.push("/login");
+      return;
+    }
+
+    setIsLoadingCart(true);
+
+    try {
+      const response = await fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: produk.id, qty }),
+      });
+
+      if (response.ok) {
+        router.push("/cart");
+      } else {
+        const data = await response.json();
+        setCartMessage({ type: "error", text: data.error || "Failed to add to cart" });
+      }
+    } catch (error) {
+      setCartMessage({ type: "error", text: "Failed to add to cart" });
+    } finally {
+      setIsLoadingCart(false);
+    }
+  };
 
   return (
     <div className="pb-20">
@@ -218,13 +282,31 @@ export default function ProductDetailClient({
             </div>
 
             {/* Action Buttons */}
-            <div className="mt-8 flex gap-3">
-              <button className="flex-1 bg-[#0a1c4a] text-white text-[14px] py-3.5 rounded-lg hover:bg-[#0a1c4a]/90 transition-colors font-medium">
-                Buy Now
-              </button>
-              <button className="flex-1 border border-[#c1e1c1] text-gray-800 bg-white text-[14px] py-3.5 rounded-lg hover:bg-gray-50 transition-colors font-medium">
-                Add to Cart
-              </button>
+            <div className="mt-8 flex gap-3 flex-col">
+              {cartMessage && (
+                <div className={`px-4 py-3 rounded-lg text-sm font-medium ${cartMessage.type === "success"
+                    ? "bg-green-50 text-green-800 border border-green-200"
+                    : "bg-red-50 text-red-800 border border-red-200"
+                  }`}>
+                  {cartMessage.text}
+                </div>
+              )}
+              <div className="flex gap-3">
+                <button
+                  onClick={handleBuyNow}
+                  disabled={isLoadingCart}
+                  className="flex-1 bg-[#0a1c4a] text-white text-[14px] py-3.5 rounded-lg hover:bg-[#0a1c4a]/90 transition-colors font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {isLoadingCart ? "Loading..." : "Buy Now"}
+                </button>
+                <button
+                  onClick={handleAddToCart}
+                  disabled={isLoadingCart}
+                  className="flex-1 border border-[#c1e1c1] text-gray-800 bg-white text-[14px] py-3.5 rounded-lg hover:bg-gray-50 transition-colors font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {isLoadingCart ? "Loading..." : "Add to Cart"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -341,10 +423,29 @@ export default function ProductDetailClient({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+                        if (!session) {
+                          router.push("/login");
+                          return;
+                        }
+                        setIsLoadingCart(true);
+                        fetch("/api/cart", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ productId: p.id, qty: 1 }),
+                        })
+                          .then(() => {
+                            setCartMessage({ type: "success", text: "Added to cart successfully!" });
+                            setTimeout(() => setCartMessage(null), 3000);
+                          })
+                          .catch(() => {
+                            setCartMessage({ type: "error", text: "Failed to add to cart" });
+                          })
+                          .finally(() => setIsLoadingCart(false));
                       }}
-                      className="w-full bg-[#0a1c4a] text-white text-[14px] py-3.5 rounded-lg hover:bg-[#0a1c4a]/90 transition-colors font-medium"
+                      disabled={isLoadingCart}
+                      className="w-full bg-[#0a1c4a] text-white text-[14px] py-3.5 rounded-lg hover:bg-[#0a1c4a]/90 transition-colors font-medium disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                      Add To Cart
+                      {isLoadingCart ? "Loading..." : "Add To Cart"}
                     </button>
                   </div>
                 </div>
