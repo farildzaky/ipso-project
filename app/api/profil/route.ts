@@ -26,6 +26,10 @@ export async function GET() {
 
 export async function PUT(req: Request) {
   const session = await auth();
+
+  console.log("SESSION ID:", session?.user?.id);
+  console.log("SESSION USER:", session?.user);
+
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -60,7 +64,8 @@ export async function PUT(req: Request) {
     });
 
     return NextResponse.json(updated);
-  } catch {
+  } catch (e) {
+    console.error("Profil update error:", e);
     return NextResponse.json({ error: "Server error." }, { status: 500 });
   }
 }
