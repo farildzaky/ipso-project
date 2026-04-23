@@ -3,6 +3,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import AuthImage from "@/public/auth-farm.svg";
+import EcoBite from "@/public/ecobite_logo.svg";
+import Image from "next/image";
 import Link from "next/link";
 
 export default function RegisterForm() {
@@ -22,7 +25,7 @@ export default function RegisterForm() {
     setError("");
     setLoading(true);
 
-    const res = await fetch("/api/auth/register", {
+    const res = await fetch("/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
@@ -43,27 +46,30 @@ export default function RegisterForm() {
     <div className="grid grid-cols-1 md:grid-cols-2 min-h-screen">
       {/* Kiri */}
       <div className="hidden md:flex relative overflow-hidden bg-[#b8cce0] min-h-screen">
-  <img
-    src="/auth-farm.svg"
-    alt="EcoBite Farm"
-    className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
-  />
-</div>
+        <Image
+          src={AuthImage}
+          alt="EcoBite Farm"
+          fill
+          className="object-cover object-bottom-left"
+        />
+      </div>
 
       {/* Kanan */}
       <div className="flex flex-col items-center justify-center px-8 md:px-16 py-12 bg-white">
         <div className="flex items-center gap-2 mb-8">
-          <img
-            src="/ecobite_logo.svg"
+          <Image
+            src={EcoBite}
             alt="EcoBite"
+            width={28}
+            height={28}
             className="w-7 h-7 object-contain"
           />
-          <span className="font-serif text-xl font-semibold text-gray-900">
+          <span className=" text-xl font-semibold text-gray-900">
             EcoBite
           </span>
         </div>
 
-        <h1 className="font-serif text-3xl font-semibold text-gray-900 mb-1">
+        <h1 className=" text-3xl font-semibold text-gray-900 mb-1">
           Get Started Now!
         </h1>
         <p className="text-sm text-gray-500 mb-8">
