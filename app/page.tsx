@@ -1,9 +1,15 @@
-import Image from "next/image";
+// app/page.tsx
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
 
-export default function Home() {
-  return (
-    <div className="bg-white h-screen ">
+export default async function RootPage() {
+  const session = await auth();
 
-    </div>
-  );
+  if (session?.user?.role === "admin") {
+    redirect("/admin");
+  } else if (session) {
+    redirect("/katalog");
+  } else {
+    redirect("/login");
+  }
 }
