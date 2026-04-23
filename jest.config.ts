@@ -1,15 +1,24 @@
-import type { Config } from "jest";
+import type { Config } from 'jest'
+import nextJest from 'next/jest.js'
+
+const createJestConfig = nextJest({
+  dir: './',
+})
 
 const config: Config = {
-  preset: "ts-jest",
-  testEnvironment: "node",
-  verbose: true,
-  moduleNameMapper: {
-    "^@/(.*)$": "<rootDir>/$1",
-  },
-  transform: {
-    "^.+\\.tsx?$": ["ts-jest", { tsconfig: { module: "commonjs" } }],
-  },
-};
+  coverageProvider: 'v8',
+  testEnvironment: 'jsdom',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
 
-export default config;
+  testMatch: [
+    "**/?(*.)+(spec|test).[jt]s?(x)"
+  ],
+
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/$1',
+
+    '^.+\\.(svg|png|jpg|jpeg|gif|webp)$': '<rootDir>/__mocks__/fileMock.js',
+  },
+}
+
+export default createJestConfig(config)
