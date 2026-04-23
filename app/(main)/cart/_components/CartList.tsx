@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import TrashIcon from "../../../../assets/admin/admin_trash.svg";
 
 export type CartItemType = {
     id: number;
@@ -24,13 +23,26 @@ interface CartItemListProps {
     onItemsChange?: (items: CartItemType[]) => void;
 }
 
-export default function CartItemList({ items, onCartUpdate, checkedItems = new Set(), onCheckedChange, onItemsChange }: CartItemListProps) {
+const formatRupiah = (number: number) => {
+    return new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        minimumFractionDigits: 0,
+    }).format(number);
+};
+
+export default function CartItemList({
+    items,
+    onCartUpdate,
+    checkedItems = new Set(),
+    onCheckedChange,
+    onItemsChange
+}: CartItemListProps) {
     const [loadingItemId, setLoadingItemId] = useState<number | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [optimisticItems, setOptimisticItems] = useState<CartItemType[]>(items);
 
     const isLocalChangeRef = useRef(false);
-
     const debounceRefs = useRef<{ [key: number]: NodeJS.Timeout }>({});
 
     useEffect(() => {
@@ -45,14 +57,6 @@ export default function CartItemList({ items, onCartUpdate, checkedItems = new S
             onItemsChange?.(optimisticItems);
         }
     }, [optimisticItems, onItemsChange]);
-
-    const formatRupiah = (number: number) => {
-        return new Intl.NumberFormat("id-ID", {
-            style: "currency",
-            currency: "IDR",
-            minimumFractionDigits: 0,
-        }).format(number);
-    };
 
     const handleDeleteItem = async (itemId: number) => {
         setLoadingItemId(itemId);
@@ -70,10 +74,8 @@ export default function CartItemList({ items, onCartUpdate, checkedItems = new S
                 const errData = await response.json();
                 throw new Error(errData.error || "Failed to delete item");
             }
-            setError(null);
-            onCartUpdate?.();
+            onCartUpdate?.(); // Sync latar belakang
         } catch (err) {
-            console.error("Delete error:", err);
             const errorMsg = err instanceof Error ? err.message : "Failed to delete item";
             setError(errorMsg);
             setOptimisticItems(oldItems);
@@ -109,16 +111,14 @@ export default function CartItemList({ items, onCartUpdate, checkedItems = new S
                     const errData = await response.json();
                     throw new Error(errData.error || "Failed to update quantity");
                 }
-                setError(null);
                 onCartUpdate?.();
             } catch (err) {
-                console.error("Update error:", err);
                 const errorMsg = err instanceof Error ? err.message : "Failed to update quantity";
                 setError(errorMsg);
-                setOptimisticItems(oldItems); 
+                setOptimisticItems(oldItems);
                 setTimeout(() => setError(null), 3000);
             }
-        }, 500);
+        }, 500); 
     };
 
     const handleToggleCheckbox = (itemId: number) => {
@@ -151,21 +151,12 @@ export default function CartItemList({ items, onCartUpdate, checkedItems = new S
 
         try {
             for (const itemId of idsToDelete) {
-                const response = await fetch(`/api/cart/${itemId}`, {
-                    method: "DELETE",
-                });
-                if (!response.ok) {
-                    const errData = await response.json();
-                    throw new Error(errData.error || "Failed to delete item");
-                }
+                await fetch(`/api/cart/${itemId}`, { method: "DELETE" });
             }
-            setError(null);
             onCheckedChange?.(new Set());
             onCartUpdate?.();
         } catch (err) {
-            console.error("Delete error:", err);
-            const errorMsg = err instanceof Error ? err.message : "Failed to delete items";
-            setError(errorMsg);
+            setError("Failed to delete items");
             setOptimisticItems(oldItems);
             setTimeout(() => setError(null), 3000);
         } finally {
@@ -186,26 +177,26 @@ export default function CartItemList({ items, onCartUpdate, checkedItems = new S
                 <div className="flex items-center gap-6 text-sm">
                     <button onClick={handleDeleteAll} disabled={checkedItems.size === 0} className="flex items-center gap-2 text-gray-600 hover:text-red-500 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                         Delete All
-                        <Image src={TrashIcon} alt="Delete All" className="w-4 h-4 opacity-70 hover:opacity-100" />
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
                     </button>
                     <label className="flex items-center gap-2 text-gray-600 cursor-pointer font-medium">
                         Choose All
-                        <input type="checkbox" checked={checkedItems.size === optimisticItems.length && optimisticItems.length > 0} onChange={handleSelectAll} className="w-5 h-5 rounded border-gray-300 text-[#1a3a5c] focus:ring-[#1a3a5c] cursor-pointer" />
+                        <input type="checkbox" checked={checkedItems.size === optimisticItems.length && optimisticItems.length > 0} onChange={handleSelectAll} aria-label="Choose All" className="w-5 h-5 rounded border-gray-300 text-[#1a3a5c] focus:ring-[#1a3a5c] cursor-pointer" />
                     </label>
                 </div>
             </div>
 
-            <div className="flex flex-col divide-y divide-gray-300">
+            <div className="flex flex-col divide-y divide-gray-200 px-5">
                 {optimisticItems.length === 0 ? (
-                    <div className="p-8 text-center text-gray-500">
-                        Cart is empty
-                    </div>
+                    <div className="p-8 text-center text-gray-500">Cart is empty</div>
                 ) : (
                     optimisticItems.map((item) => (
-                        <div key={item.id} className="p-5 border-b border-gray-300 flex gap-5" style={{ opacity: loadingItemId === item.id ? 0.6 : 1 }}>
+                        <div key={item.id} className="py-5 flex gap-5 transition-opacity" style={{ opacity: loadingItemId === item.id ? 0.6 : 1 }}>
                             <div className="w-24 h-24 shrink-0 rounded-xl overflow-hidden relative border border-gray-300 bg-gray-100">
                                 {item.image ? (
-                                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                                    <Image src={item.image} alt={item.name} fill className="object-cover" />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center text-gray-400 text-2xl">🍽️</div>
                                 )}
@@ -218,10 +209,9 @@ export default function CartItemList({ items, onCartUpdate, checkedItems = new S
                                 </div>
                                 <div className="mt-4 space-y-2">
                                     <div className="flex items-center border border-gray-300 rounded-lg w-fit h-9">
-                                        {/* HAPUS disabled saat loading dari tombol + dan - */}
-                                        <button className="w-9 h-full flex items-center justify-center text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition" onClick={() => handleUpdateQuantity(item.id, item.qty - 1)}>-</button>
+                                        <button aria-label="Kurangi kuantitas" className="w-9 h-full flex items-center justify-center text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition" onClick={() => handleUpdateQuantity(item.id, item.qty - 1)}>-</button>
                                         <span className="w-10 text-center text-sm font-medium border-x border-gray-300 h-full flex items-center justify-center">{item.qty}</span>
-                                        <button className="w-9 h-full flex items-center justify-center text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition" onClick={() => handleUpdateQuantity(item.id, item.qty + 1)}>+</button>
+                                        <button aria-label="Tambah kuantitas" className="w-9 h-full flex items-center justify-center text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition" onClick={() => handleUpdateQuantity(item.id, item.qty + 1)}>+</button>
                                     </div>
                                     <p className="text-xs text-gray-500 font-medium">
                                         Stock Total: <span className="text-gray-800">{item.stock} pcs</span>
@@ -230,14 +220,15 @@ export default function CartItemList({ items, onCartUpdate, checkedItems = new S
                             </div>
 
                             <div className="flex flex-col items-end justify-between py-1">
-                                <input type="checkbox" checked={checkedItems.has(item.id)} onChange={() => handleToggleCheckbox(item.id)} className="w-5 h-5 rounded border-gray-300 text-[#1a3a5c] focus:ring-[#1a3a5c] cursor-pointer" />
+                                <input type="checkbox" checked={checkedItems.has(item.id)} onChange={() => handleToggleCheckbox(item.id)} aria-label={`Select ${item.name}`} className="w-5 h-5 rounded border-gray-300 text-[#1a3a5c] focus:ring-[#1a3a5c] cursor-pointer" />
                                 <div className="text-right mt-4 mb-2">
                                     <p className="text-xs text-gray-500 mb-1">Total: x{item.qty}</p>
-                                    <p className="font-bold text-gray-900 text-lg">{formatRupiah(item.price)}</p>
+                                    <p className="font-bold text-gray-900 text-lg">{formatRupiah(item.price * item.qty)}</p>
                                 </div>
-                                {/* Tombol Trash TETAP disabled saat sedang proses delete */}
-                                <button className="transition-opacity hover:opacity-70 disabled:cursor-not-allowed" onClick={() => handleDeleteItem(item.id)} disabled={loadingItemId === item.id}>
-                                    <Image src={TrashIcon} alt="Delete" className="w-5 h-5 opacity-50 hover:opacity-100 transition-opacity" />
+                                <button aria-label="Hapus dari keranjang" className="transition-colors text-gray-400 hover:text-red-500 disabled:opacity-50" onClick={() => handleDeleteItem(item.id)} disabled={loadingItemId === item.id}>
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
                                 </button>
                             </div>
                         </div>

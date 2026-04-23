@@ -23,6 +23,20 @@ export default function SearchBar({
     const [open, setOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
+    const [localSearch, setLocalSearch] = useState(searchTerm);
+
+    useEffect(() => {
+        setLocalSearch(searchTerm);
+    }, [searchTerm]);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            onSearchChange(localSearch);
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [localSearch, onSearchChange]);
+
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -52,8 +66,8 @@ export default function SearchBar({
                 />
                 <input
                     type="text"
-                    value={searchTerm}
-                    onChange={(e) => onSearchChange(e.target.value)}
+                    value={localSearch}
+                    onChange={(e) => setLocalSearch(e.target.value)}
                     placeholder="Cari sesuatu disini ..."
                     className="w-full border border-gray-300 rounded-xl pl-12 pr-4 h-12 outline-none focus:border-[#1a3a5c] focus:ring-1 focus:ring-[#1a3a5c]"
                 />
