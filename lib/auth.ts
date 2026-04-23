@@ -1,3 +1,4 @@
+// lib/auth.ts
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
@@ -28,6 +29,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           id: String(user.id),
           email: user.email,
           name: user.nama,
+          image: user.image,
           role: user.role,
         };
       },
@@ -41,7 +43,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return token;
     },
-    session({ session, token }) {
+    async session({ session, token }) {
+      // Ambil data terbaru dari DB supaya nama & foto selalu update
+      if (token.id) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: parseInt(token.id as string) },
+          select: { nama: true, image: true },
+        });
+        if (dbUser) {
+          session.user.name = dbUser.nama;
+          session.user.image = dbUser.image;
+        }
+      }
       session.user.id = token.id as string;
       session.user.role = token.role as string;
       return session;

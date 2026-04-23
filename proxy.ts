@@ -17,8 +17,11 @@ export async function proxy(request: NextRequest) {
 
   // Redirect logged-in users away from login/register
   if (session && isAuthPage) {
-    return NextResponse.redirect(new URL("/katalog", request.url));
+  if (session.user?.role === "admin") {
+    return NextResponse.redirect(new URL("/admin", request.url));
   }
+  return NextResponse.redirect(new URL("/katalog", request.url));
+}
 
   // Admin-only pages
   if (isAdminPage && session?.user?.role !== "admin") {

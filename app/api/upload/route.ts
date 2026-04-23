@@ -1,66 +1,42 @@
-// app/api/profil/route.ts
+// app/api/upload/route.ts
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { v2 as cloudinary } from "cloudinary";
 
-export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-  const user = await prisma.user.findUnique({
-    where: { id: parseInt(session.user.id) },
-    select: {
-      id: true,
-      nama: true,
-      email: true,
-      noTelepon: true,
-      alamat: true,
-      image: true,
-    },
-  });
-
-  return NextResponse.json(user);
-}
-
-export async function PUT(req: Request) {
+export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    const body = await req.json();
-    const { nama, noTelepon, alamat, image } = body;
+    const formData = await req.formData();
+    const file = formData.get("file") as File;
 
-    if (!nama || nama.length < 2) {
-      return NextResponse.json(
-        { error: "Nama minimal 2 karakter" },
-        { status: 400 }
-      );
+    if (!file) {
+      return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
 
-    const updated = await prisma.user.update({
-      where: { id: parseInt(session.user.id) },
-      data: {
-        nama,
-        noTelepon: noTelepon || null,
-        alamat: alamat || null,
-        ...(image !== undefined && { image }),
-      },
-      select: {
-        id: true,
-        nama: true,
-        email: true,
-        noTelepon: true,
-        alamat: true,
-        image: true,
-      },
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const base64 = `data:${file.type};base64,${buffer.toString("base64")}`;
+
+    const result = await cloudinary.uploader.upload(base64, {
+      folder: "ecobite/profiles",
+      transformation: [
+        { width: 200, height: 200, crop: "fill", gravity: "face" },
+      ],
     });
 
-    return NextResponse.json(updated);
-  } catch {
-    return NextResponse.json({ error: "Server error." }, { status: 500 });
+    return NextResponse.json({ url: result.secure_url });
+  } catch (e) {
+    console.error(e);
+    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
   }
 }
