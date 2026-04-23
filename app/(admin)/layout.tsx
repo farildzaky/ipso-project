@@ -8,8 +8,8 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-//   const session = await auth();
-//   if (!session || session.user.role !== "admin") redirect("/katalog");
+  const session = await auth();
+  if (!session || session.user.role !== "admin") redirect("/katalog");
 
 const name = "Admin"; // Ganti dengan nama pengguna yang sebenarnya dari session    
   return (
