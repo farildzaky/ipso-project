@@ -9,7 +9,7 @@ const schema = z.object({
   deskripsi: z.string().min(1),
   kategori: z.string().min(1),
   tenant: z.string().min(1),
-  gambarUrls: z.array(z.string()).min(1, "Minimal 1 foto produk"),
+  gambarUrl: z.array(z.string()).min(1, "Minimal 1 foto produk"),
 });
 
 export async function POST(req: Request) {

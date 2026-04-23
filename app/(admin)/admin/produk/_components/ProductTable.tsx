@@ -15,7 +15,7 @@ type Product = {
   stok: number;
   kategori: string;
   tenant: string;
-  gambarUrls: string[];
+  gambarUrl: string[];
 };
 
 export default function ProductTable({ produk }: { produk: Product[] }) {

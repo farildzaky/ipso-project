@@ -75,7 +75,7 @@ export default async function KatalogPage({
               namaProduct={p.namaProduct}
               harga={p.harga.toString()}
               tenant={p.tenant}
-              gambarUrl={p.gambarUrls[0] ?? null}
+              gambarUrl={p.gambarUrl ?? null}
             />
           ))}
         </div>

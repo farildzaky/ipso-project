@@ -21,7 +21,7 @@ export default async function ProdukDetailPage({
       namaProduct: true,
       harga: true,
       tenant: true,
-      gambarUrls: true,
+      gambarUrl: true,
     },
   });
 
@@ -49,14 +49,14 @@ export default async function ProdukDetailPage({
           stok: produk.stok,
           deskripsi: produk.deskripsi ?? "",
           tenant: produk.tenant,
-          gambarUrls: produk.gambarUrls,
+          gambarUrl: produk.gambarUrl,
         }}
         similar={similar.map((p) => ({
           id: p.id,
           namaProduct: p.namaProduct,
           harga: p.harga.toString(),
           tenant: p.tenant,
-          gambarUrl: p.gambarUrls[0] ?? null,
+          gambarUrl: p.gambarUrl[0] ?? null,
         }))}
       />
     </div>
