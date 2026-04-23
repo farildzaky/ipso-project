@@ -63,7 +63,7 @@ export default function TambahProdukPage() {
         deskripsi: fd.get("deskripsi") || null,
         kategori: fd.get("kategori"),
         tenant: fd.get("tenant"),
-        gambarUrls: images.map((img) => img.url),
+        gambarUrl: images.map((img) => img.url),
       }),
     });
 

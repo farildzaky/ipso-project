@@ -20,9 +20,7 @@ async function main() {
           "Immerse yourself in the vibrant medley of flavors and textures with our exquisite Vegetable Salad. Crafted with an assortment of crisp, farm-fresh vegetables, each ingredient is hand-selected to ensure optimal taste and nutritional value.",
         kategori: "Healthy Food",
         tenant: "The Aston Family",
-        gambarUrls: [
-
-        ],
+        gambarUrl: "",
       },
       {
         namaProduct: "Tenderloin Steak",
@@ -32,7 +30,7 @@ async function main() {
           "Premium tenderloin steak grilled to perfection, served with black pepper sauce and roasted baby potatoes. Surplus from our dinner banquet.",
         kategori: "Main Course",
         tenant: "Rainbow Hotel",
-        gambarUrls: [],
+        gambarUrl: "",
       },
       {
         namaProduct: "Breakfast Set",
@@ -42,7 +40,7 @@ async function main() {
           "Complete continental breakfast set including waffles, fresh berries, scrambled eggs, and honey. Leftover from morning buffet.",
         kategori: "Breakfast",
         tenant: "SunMoon Resort",
-        gambarUrls: [],
+        gambarUrl: "",
       },
       {
         namaProduct: "Fresh Broccoli",
@@ -52,7 +50,7 @@ async function main() {
           "Fresh, high-quality organic broccoli unused from our kitchen prep. Perfect for your own cooking needs.",
         kategori: "Raw Ingredients",
         tenant: "Hotel California",
-        gambarUrls: [],
+        gambarUrl: "",
       },
       {
         namaProduct: "Smoked Salmon",
@@ -62,7 +60,7 @@ async function main() {
           "Norwegian smoked salmon served with cream cheese and dill. Perfectly preserved from our high-end appetizer menu.",
         kategori: "Seafood",
         tenant: "D'Kingdom",
-        gambarUrls: [],
+        gambarUrl: "",
       },
       {
         namaProduct: "Dimsum Assortment",
@@ -72,7 +70,7 @@ async function main() {
           "Authentic handmade dimsum assortment including hakau and siew mai. Steamed fresh today.",
         kategori: "Asian",
         tenant: "Koberium",
-        gambarUrls: [],
+        gambarUrl: "",
       },
       {
         namaProduct: "Chicken Teriyaki",
@@ -82,7 +80,7 @@ async function main() {
           "Grilled chicken glazed in authentic Japanese teriyaki sauce, sprinkled with sesame seeds.",
         kategori: "Asian",
         tenant: "D'Kingdom",
-        gambarUrls: [],
+        gambarUrl: "",
       },
       {
         namaProduct: "Meatball Spaghetti",
@@ -92,7 +90,7 @@ async function main() {
           "Classic Italian spaghetti tossed in rich marinara sauce with homemade beef meatballs and parmesan cheese.",
         kategori: "Pasta",
         tenant: "Nirwana Suites",
-        gambarUrls: [],
+        gambarUrl: "",
       },
       {
         namaProduct: "Salad Set (Fruit)",
@@ -102,7 +100,7 @@ async function main() {
           "A refreshing mix of seasonal tropical fruits served in an avocado shell, topped with feta cheese.",
         kategori: "Healthy Food",
         tenant: "D'Cozy Living",
-        gambarUrls: [],
+        gambarUrl: "",
       },
       {
         namaProduct: "Wagyu Beef Burger",
@@ -112,7 +110,7 @@ async function main() {
           "Gourmet burger featuring a juicy Wagyu beef patty, caramelized onions, and truffle mayo on a brioche bun.",
         kategori: "Western",
         tenant: "The Ritz Lounge",
-        gambarUrls: [],
+        gambarUrl: "",
       },
       {
         namaProduct: "Seafood Paella",
@@ -122,7 +120,7 @@ async function main() {
           "Traditional Spanish rice dish loaded with shrimp, mussels, and calamari. Flavored with real saffron.",
         kategori: "Main Course",
         tenant: "Mediterraneo Resort",
-        gambarUrls: [],
+        gambarUrl: "",
       },
       {
         namaProduct: "Tiramisu Cake Slice",
@@ -132,7 +130,7 @@ async function main() {
           "Classic Italian dessert made of ladyfingers dipped in coffee, layered with a whipped mixture of eggs, sugar, and mascarpone cheese.",
         kategori: "Dessert",
         tenant: "SunMoon Resort",
-        gambarUrls: [],
+        gambarUrl: "",
       },
       {
         namaProduct: "Roasted Duck Half",
@@ -142,7 +140,7 @@ async function main() {
           "Crispy skin roasted duck served with hoisin sauce and thin pancakes. Prepared by our executive chef.",
         kategori: "Asian",
         tenant: "Emperor Dynasty Hotel",
-        gambarUrls: [],
+        gambarUrl: "",
       },
       {
         namaProduct: "Mushroom Risotto",
@@ -152,7 +150,7 @@ async function main() {
           "Creamy Arborio rice slow-cooked with porcini mushrooms and finished with truffle oil and parmesan.",
         kategori: "Main Course",
         tenant: "Nirwana Suites",
-        gambarUrls: [],
+        gambarUrl: "",
       },
       {
         namaProduct: "Assorted French Pastries",
@@ -162,7 +160,7 @@ async function main() {
           "A box of 4 beautifully crafted French pastries including eclairs and fruit tarts. Surplus from our afternoon tea.",
         kategori: "Dessert",
         tenant: "Le Petit Chateau",
-        gambarUrls: [],
+        gambarUrl: "",
       },
     ],
   });
