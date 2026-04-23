@@ -16,7 +16,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { nama, email, password } = parsed.data;
+    const { nama, email, password, noTelepon, alamat } = parsed.data;
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     const hashedPassword = await hash(password, 12);
 
     const user = await prisma.user.create({
-      data: { nama, email, password: hashedPassword },
+      data: { nama, email, password: hashedPassword, noTelepon, alamat },
       select: { id: true, nama: true, email: true },
     });
 

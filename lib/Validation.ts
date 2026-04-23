@@ -10,6 +10,8 @@ export const registerSchema = z.object({
   nama: z.string().min(2, "Nama minimal 2 karakter"),
   email: z.string().email("Email tidak valid"),
   password: z.string().min(6, "Password minimal 6 karakter"),
+  noTelepon: z.string().min(1, "Nomor telepon wajib diisi"),
+  alamat: z.string().min(1, "Alamat wajib diisi"),
 });
 
 export const profileSchema = z.object({
