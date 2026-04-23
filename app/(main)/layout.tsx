@@ -1,5 +1,9 @@
-import MainFooter from "./_components/MainFooter";
+// app/(main)/layout.tsx
+"use client";
+
+import { SessionProvider } from "next-auth/react";
 import MainHeader from "./_components/MainHeader";
+import MainFooter from "./_components/MainFooter";
 
 export default function MainLayout({
   children,
@@ -7,10 +11,12 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   return (
-    <>
-      <MainHeader />
-      <main className="min-h-screen bg-gray-50">{children}</main>
-      <MainFooter />
-    </>
+    <SessionProvider>
+      <div className="min-h-screen flex flex-col">
+        <MainHeader />
+        <main className="flex-1">{children}</main>
+        <MainFooter />
+      </div>
+    </SessionProvider>
   );
 }

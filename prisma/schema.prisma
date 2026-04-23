@@ -14,16 +14,17 @@ datasource db {
 
 
 model User {
-  id         Int      @id @default(autoincrement())
-  nama       String
-  email      String   @unique
-  password   String
-  role       String   @default("customer")
-  noTelepon  String?
-  alamat     String?
-  createdAt  DateTime @default(now())
+  id          Int       @id @default(autoincrement())
+  nama        String
+  email       String    @unique
+  password    String
+  role        String    @default("customer")
+  noTelepon   String?
+  alamat      String?
+  image       String?   // ← tambahkan baris ini
+  createdAt   DateTime  @default(now())
 
-  cart         Cart?
+  cart        Cart?
   transactions Transaction[]
 }
 

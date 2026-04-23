@@ -17,6 +17,7 @@ export async function GET() {
       email: true,
       noTelepon: true,
       alamat: true,
+      image: true,
     },
   });
 
@@ -31,7 +32,7 @@ export async function PUT(req: Request) {
 
   try {
     const body = await req.json();
-    const { nama, noTelepon, alamat } = body;
+    const { nama, noTelepon, alamat, image } = body;
 
     if (!nama || nama.length < 2) {
       return NextResponse.json(
@@ -42,13 +43,19 @@ export async function PUT(req: Request) {
 
     const updated = await prisma.user.update({
       where: { id: parseInt(session.user.id) },
-      data: { nama, noTelepon, alamat },
+      data: {
+        nama,
+        noTelepon: noTelepon || null,
+        alamat: alamat || null,
+        ...(image !== undefined && { image }),
+      },
       select: {
         id: true,
         nama: true,
         email: true,
         noTelepon: true,
         alamat: true,
+        image: true,
       },
     });
 
