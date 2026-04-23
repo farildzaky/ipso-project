@@ -28,7 +28,7 @@ export default async function EditProdukPage({
           deskripsi: produk.deskripsi ?? "",
           kategori: produk.kategori,
           tenant: produk.tenant,
-          gambarUrls: produk.gambarUrls,
+          gambarUrl: produk.gambarUrl,
         }}
       />
     </div>
