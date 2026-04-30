@@ -79,9 +79,9 @@ describe("RegisterForm", () => {
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        "/api/auth/register",
-        expect.objectContaining({ method: "POST" })
-      );
+  "/api/register",
+  expect.objectContaining({ method: "POST" })
+);
     });
   });
 
