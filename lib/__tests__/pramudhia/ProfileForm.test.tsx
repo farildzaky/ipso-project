@@ -1,7 +1,7 @@
 // __tests__/pramudhia/ProfileForm.test.tsx
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import ProfileForm from "@/app/(main)/profil/_components/ProfileForm";
+import ProfileForm from "@/app/(main)/profil/_components/ProfilForm";
 
 jest.mock("next-auth/react", () => ({
   useSession: () => ({

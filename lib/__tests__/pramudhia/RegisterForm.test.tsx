@@ -1,7 +1,7 @@
 // __tests__/pramudhia/RegisterForm.test.tsx
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import RegisterForm from "@/app/(auth)/_components/auth/RegisterForm";
+import RegisterForm from "@/app/(auth)/_components/RegisterForm";
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -20,6 +20,20 @@ jest.mock("next/link", () => ({
     <a href={href}>{children}</a>
   ),
 }));
+
+async function fillForm() {
+  await userEvent.type(screen.getByPlaceholderText("Enter your full name"), "Test User");
+  await userEvent.type(screen.getByPlaceholderText("Enter your email"), "test@example.com");
+  await userEvent.type(screen.getByPlaceholderText("Enter your password"), "password123");
+
+  // Isi noTelepon jika ada
+  const teleponInput = screen.queryByPlaceholderText(/08123456789/i);
+  if (teleponInput) await userEvent.type(teleponInput, "08123456789");
+
+  // Isi alamat jika ada
+  const alamatInput = screen.queryByPlaceholderText(/alamat/i);
+  if (alamatInput) await userEvent.type(alamatInput, "Jl. Test No. 1");
+}
 
 describe("RegisterForm", () => {
   beforeEach(() => {
@@ -44,14 +58,11 @@ describe("RegisterForm", () => {
 
   it("menampilkan error jika belum centang terms", async () => {
     render(<RegisterForm />);
-
-    await userEvent.type(screen.getByPlaceholderText("Enter your full name"), "Test User");
-    await userEvent.type(screen.getByPlaceholderText("Enter your email"), "test@example.com");
-    await userEvent.type(screen.getByPlaceholderText("Enter your password"), "password123");
+    await fillForm();
     fireEvent.click(screen.getByRole("button", { name: /create account/i }));
 
     await waitFor(() => {
-      expect(screen.getByText("Kamu harus menyetujui Terms & Privacy.")).toBeInTheDocument();
+     expect(screen.getByText("Kamu harus menyetujui Terms & Privacy.")).toBeInTheDocument();
     });
   });
 
@@ -62,11 +73,8 @@ describe("RegisterForm", () => {
     });
 
     render(<RegisterForm />);
-
-    await userEvent.type(screen.getByPlaceholderText("Enter your full name"), "Test User");
-    await userEvent.type(screen.getByPlaceholderText("Enter your email"), "test@example.com");
-    await userEvent.type(screen.getByPlaceholderText("Enter your password"), "password123");
-    fireEvent.click(screen.getByLabelText(/i agree/i));
+    await fillForm();
+    fireEvent.click(screen.getByRole("checkbox"));
     fireEvent.click(screen.getByRole("button", { name: /create account/i }));
 
     await waitFor(() => {
@@ -84,11 +92,8 @@ describe("RegisterForm", () => {
     });
 
     render(<RegisterForm />);
-
-    await userEvent.type(screen.getByPlaceholderText("Enter your full name"), "Test User");
-    await userEvent.type(screen.getByPlaceholderText("Enter your email"), "existing@example.com");
-    await userEvent.type(screen.getByPlaceholderText("Enter your password"), "password123");
-    fireEvent.click(screen.getByLabelText(/i agree/i));
+    await fillForm();
+    fireEvent.click(screen.getByRole("checkbox"));
     fireEvent.click(screen.getByRole("button", { name: /create account/i }));
 
     await waitFor(() => {
