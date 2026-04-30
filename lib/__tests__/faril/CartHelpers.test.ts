@@ -1,274 +1,189 @@
 /**
- * Cart Helper Functions - Whitebox Testing
- * Testing internal logic untuk quantity validation, price calculation, dan cart operations
+ * CART HELPERS - WHITE-BOX TESTING
+ * Coverage: WB-01 sampai WB-11, WB-24 sampai WB-30
  */
 
-describe('Cart Helper Functions', () => {
+import '@testing-library/jest-dom';
+
+// Pure functions under test
+const validateQty = (qty: number, stock: number): boolean => {
+    if (qty <= 0) return false;
+    if (qty > stock) return false;
+    return true;
+};
+
+const calculateTotal = (items: Array<{ price: number; qty: number }>): number => {
+    return items.reduce((acc, item) => acc + item.price * item.qty, 0);
+};
+
+const formatRupiah = (number: number): string => {
+    return new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        minimumFractionDigits: 0,
+    }).format(number);
+};
+
+type CartItem = { id: number; name: string; price: number; qty: number; category?: string };
+
+const updateCartItem = (items: CartItem[], itemId: number, newQty: number): CartItem[] => {
+    return items.map(item => item.id === itemId ? { ...item, qty: newQty } : item);
+};
+
+const removeCartItem = (items: CartItem[], itemId: number): CartItem[] => {
+    return items.filter(item => item.id !== itemId);
+};
+
+const filterItems = (items: CartItem[], searchTerm: string): CartItem[] => {
+    const lower = searchTerm.toLowerCase();
+    return items.filter(item =>
+        item.name.toLowerCase().includes(lower) ||
+        (item.category && item.category.toLowerCase().includes(lower))
+    );
+};
+
+const sortItems = (items: CartItem[], sortBy: string): CartItem[] => {
+    return [...items].sort((a, b) => {
+        if (sortBy === "Lowest Price") return a.price - b.price;
+        if (sortBy === "Newest") return b.id - a.id;
+        return 0;
+    });
+};
+
+const calculateSelectedTotal = (items: CartItem[], checkedIds: Set<number>): number => {
+    return items
+        .filter(item => checkedIds.has(item.id))
+        .reduce((acc, item) => acc + item.price * item.qty, 0);
+};
+
+describe('Cart Helper Functions - White-Box Testing', () => {
 
     describe('Quantity Validation', () => {
-        const validateQuantity = (qty: number, stock: number): boolean => {
-            return qty > 0 && qty <= stock;
-        };
-
-        it('WB-01: Quantity harus > 0', () => {
-            expect(validateQuantity(0, 10)).toBe(false);
-            expect(validateQuantity(-1, 10)).toBe(false);
+        it('WB-01: Branch qty <= 0 → return false', () => {
+            expect(validateQty(0, 10)).toBe(false);
+            expect(validateQty(-1, 10)).toBe(false);
         });
 
-        it('WB-02: Quantity harus <= stock', () => {
-            expect(validateQuantity(5, 10)).toBe(true);
-            expect(validateQuantity(10, 10)).toBe(true);
-            expect(validateQuantity(11, 10)).toBe(false);
+        it('WB-02: Branch qty > stock → return false', () => {
+            expect(validateQty(11, 10)).toBe(false);
+            expect(validateQty(100, 10)).toBe(false);
         });
 
-        it('WB-03: Quantity validation dengan berbagai edge cases', () => {
-            expect(validateQuantity(1, 1)).toBe(true);
-            expect(validateQuantity(100, 100)).toBe(true);
-            expect(validateQuantity(101, 100)).toBe(false);
-            expect(validateQuantity(0, 100)).toBe(false);
+        it('WB-03: Branch 0 < qty <= stock → return true', () => {
+            expect(validateQty(1, 10)).toBe(true);
+            expect(validateQty(10, 10)).toBe(true);
         });
     });
 
-    describe('Price Calculation', () => {
-        const calculateTotalPrice = (items: Array<{ price: number; qty: number }>): number => {
-            return items.reduce((total, item) => total + (item.price * item.qty), 0);
-        };
-
-        it('WB-04: Calculate total price untuk single item', () => {
-            const items = [{ price: 100000, qty: 1 }];
-            expect(calculateTotalPrice(items)).toBe(100000);
+    describe('Total Price Calculation', () => {
+        it('WB-04: Path items kosong → return 0', () => {
+            expect(calculateTotal([])).toBe(0);
         });
 
-        it('WB-05: Calculate total price untuk multiple items', () => {
+        it('WB-05: Path single item → return price * qty', () => {
+            expect(calculateTotal([{ price: 10000, qty: 3 }])).toBe(30000);
+        });
+
+        it('WB-06: Path multiple items → return sum(price * qty)', () => {
             const items = [
-                { price: 100000, qty: 1 },
-                { price: 50000, qty: 2 }
+                { price: 10000, qty: 2 },
+                { price: 5000, qty: 3 },
+                { price: 25000, qty: 1 },
             ];
-            expect(calculateTotalPrice(items)).toBe(200000);
-        });
-
-        it('WB-06: Calculate total price dengan empty items', () => {
-            expect(calculateTotalPrice([])).toBe(0);
-        });
-
-        it('WB-07: Calculate total price dengan large quantities', () => {
-            const items = [{ price: 100000, qty: 999 }];
-            expect(calculateTotalPrice(items)).toBe(99900000);
-        });
-    });
-
-    describe('Tax Calculation', () => {
-        const calculateTax = (subtotal: number, taxRate: number = 0.1): number => {
-            return Math.round(subtotal * taxRate);
-        };
-
-        it('WB-08: Tax calculation dengan 10% rate', () => {
-            expect(calculateTax(100000, 0.1)).toBe(10000);
-            expect(calculateTax(1000000, 0.1)).toBe(100000);
-        });
-
-        it('WB-09: Tax calculation dengan custom rate', () => {
-            expect(calculateTax(100000, 0.05)).toBe(5000);
-            expect(calculateTax(100000, 0.15)).toBe(15000);
-        });
-
-        it('WB-10: Tax calculation dengan rounding', () => {
-            expect(calculateTax(33333, 0.1)).toBe(3333);
-            expect(calculateTax(99999, 0.1)).toBe(10000);
-        });
-    });
-
-    describe('Shipping Cost Calculation', () => {
-        const calculateShippingCost = (distance: number, baseRate: number = 5000): number => {
-            // Rp 5000 per km
-            return Math.round(distance * baseRate);
-        };
-
-        it('WB-11: Shipping cost calculation', () => {
-            expect(calculateShippingCost(10)).toBe(50000);
-            expect(calculateShippingCost(5)).toBe(25000);
-        });
-
-        it('WB-12: Shipping cost dengan custom base rate', () => {
-            expect(calculateShippingCost(10, 10000)).toBe(100000);
-        });
-
-        it('WB-13: Shipping cost minimum', () => {
-            expect(calculateShippingCost(0)).toBe(0);
-        });
-    });
-
-    describe('Grand Total Calculation', () => {
-        const calculateGrandTotal = (subtotal: number, taxRate: number = 0.1, shippingCost: number = 0): number => {
-            const tax = Math.round(subtotal * taxRate);
-            return subtotal + tax + shippingCost;
-        };
-
-        it('WB-14: Calculate grand total with subtotal only', () => {
-            expect(calculateGrandTotal(100000, 0.1, 0)).toBe(110000);
-        });
-
-        it('WB-15: Calculate grand total dengan shipping', () => {
-            expect(calculateGrandTotal(100000, 0.1, 25000)).toBe(135000);
-        });
-
-        it('WB-16: Calculate grand total dengan berbagai tax rates', () => {
-            expect(calculateGrandTotal(100000, 0.05, 0)).toBe(105000);
-            expect(calculateGrandTotal(100000, 0.15, 0)).toBe(115000);
-        });
-    });
-
-    describe('Cart Item Operations', () => {
-        const updateCartItemQty = (items: Array<{ id: number; qty: number }>, itemId: number, newQty: number) => {
-            return items.map(item =>
-                item.id === itemId ? { ...item, qty: newQty } : item
-            );
-        };
-
-        it('WB-17: Update cart item quantity', () => {
-            const items = [{ id: 1, qty: 1 }, { id: 2, qty: 2 }];
-            const updated = updateCartItemQty(items, 1, 5);
-            expect(updated[0].qty).toBe(5);
-            expect(updated[1].qty).toBe(2);
-        });
-
-        it('WB-18: Update non-existent item harus tidak error', () => {
-            const items = [{ id: 1, qty: 1 }];
-            const updated = updateCartItemQty(items, 999, 5);
-            expect(updated.length).toBe(1);
-            expect(updated[0].qty).toBe(1);
-        });
-
-        const removeCartItem = (items: Array<{ id: number }>, itemId: number) => {
-            return items.filter(item => item.id !== itemId);
-        };
-
-        it('WB-19: Remove cart item', () => {
-            const items = [{ id: 1 }, { id: 2 }, { id: 3 }];
-            const updated = removeCartItem(items, 2);
-            expect(updated.length).toBe(2);
-            expect(updated.find(item => item.id === 2)).toBeUndefined();
-        });
-
-        it('WB-20: Remove non-existent item harus tidak error', () => {
-            const items = [{ id: 1 }, { id: 2 }];
-            const updated = removeCartItem(items, 999);
-            expect(updated.length).toBe(2);
+            expect(calculateTotal(items)).toBe(60000);
         });
     });
 
     describe('Format Rupiah', () => {
-        const formatRupiah = (number: number): string => {
-            return new Intl.NumberFormat('id-ID', {
-                style: 'currency',
-                currency: 'IDR',
-                minimumFractionDigits: 0,
-            }).format(number);
-        };
-
-        it('WB-21: Format single digit number', () => {
-            const result = formatRupiah(5);
-            expect(result).toContain('Rp');
+        it('WB-07: Path angka standar → format Rupiah benar', () => {
+            expect(formatRupiah(220000)).toMatch(/Rp\s?220\.000/);
         });
 
-        it('WB-22: Format thousands', () => {
-            const result = formatRupiah(100000);
-            expect(result).toContain('Rp');
-            expect(result).toContain('100');
-        });
-
-        it('WB-23: Format large numbers', () => {
-            const result = formatRupiah(1000000);
-            expect(result).toContain('Rp');
-            expect(result).toContain('1');
-        });
-
-        it('WB-24: Format zero value', () => {
-            const result = formatRupiah(0);
-            expect(result).toContain('Rp');
+        it('WB-08: Path nilai 0 → "Rp 0"', () => {
+            expect(formatRupiah(0)).toMatch(/Rp\s?0/);
         });
     });
 
-    describe('Cart Validation', () => {
-        interface CartItem {
-            id: number;
-            productId: number;
-            qty: number;
-            price: number;
-            stock: number;
-        }
+    describe('Cart Item Operations', () => {
+        const items: CartItem[] = [
+            { id: 1, name: 'Salad', price: 10000, qty: 1 },
+            { id: 2, name: 'Tomato', price: 5000, qty: 2 },
+        ];
 
-        const validateCartItems = (items: CartItem[]): { valid: boolean; errors: string[] } => {
-            const errors: string[] = [];
-
-            items.forEach((item, index) => {
-                if (item.qty <= 0) {
-                    errors.push(`Item ${index + 1}: Quantity harus > 0`);
-                }
-                if (item.qty > item.stock) {
-                    errors.push(`Item ${index + 1}: Quantity melebihi stok`);
-                }
-                if (item.price <= 0) {
-                    errors.push(`Item ${index + 1}: Harga tidak valid`);
-                }
-            });
-
-            return {
-                valid: errors.length === 0,
-                errors
-            };
-        };
-
-        it('WB-25: Validate empty cart', () => {
-            const result = validateCartItems([]);
-            expect(result.valid).toBe(true);
-            expect(result.errors.length).toBe(0);
+        it('WB-09: updateCartItem - item ada → quantity terupdate', () => {
+            const result = updateCartItem(items, 1, 5);
+            expect(result[0].qty).toBe(5);
+            expect(result[1].qty).toBe(2);
         });
 
-        it('WB-26: Validate valid cart items', () => {
-            const items = [
-                { id: 1, productId: 1, qty: 1, price: 100000, stock: 10 },
-                { id: 2, productId: 2, qty: 2, price: 50000, stock: 20 }
-            ];
-            const result = validateCartItems(items);
-            expect(result.valid).toBe(true);
+        it('WB-10: updateCartItem - item tidak ada → state tidak berubah', () => {
+            const result = updateCartItem(items, 999, 5);
+            expect(result).toEqual(items);
         });
 
-        it('WB-27: Validate invalid quantity (zero)', () => {
-            const items = [
-                { id: 1, productId: 1, qty: 0, price: 100000, stock: 10 }
-            ];
-            const result = validateCartItems(items);
-            expect(result.valid).toBe(false);
-            expect(result.errors[0]).toContain('Quantity harus > 0');
-        });
-
-        it('WB-28: Validate quantity exceeds stock', () => {
-            const items = [
-                { id: 1, productId: 1, qty: 20, price: 100000, stock: 10 }
-            ];
-            const result = validateCartItems(items);
-            expect(result.valid).toBe(false);
-            expect(result.errors[0]).toContain('melebihi stok');
-        });
-
-        it('WB-29: Validate invalid price', () => {
-            const items = [
-                { id: 1, productId: 1, qty: 1, price: 0, stock: 10 }
-            ];
-            const result = validateCartItems(items);
-            expect(result.valid).toBe(false);
-            expect(result.errors[0]).toContain('Harga tidak valid');
-        });
-
-        it('WB-30: Validate multiple errors', () => {
-            const items = [
-                { id: 1, productId: 1, qty: 0, price: -100, stock: 10 }
-            ];
-            const result = validateCartItems(items);
-            expect(result.valid).toBe(false);
-            expect(result.errors.length).toBeGreaterThan(1);
+        it('WB-11: removeCartItem - hapus item valid → item hilang', () => {
+            const result = removeCartItem(items, 1);
+            expect(result).toHaveLength(1);
+            expect(result[0].id).toBe(2);
         });
     });
 
+    describe('Filter Logic (Search)', () => {
+        const items: CartItem[] = [
+            { id: 1, name: 'Vegetable Salad', price: 10000, qty: 1, category: 'Vegetables' },
+            { id: 2, name: 'Beef Burger', price: 25000, qty: 1, category: 'Meat' },
+            { id: 3, name: 'Tomato Soup', price: 8000, qty: 1, category: 'Vegetables' },
+        ];
+
+        it('WB-24: Branch match nama produk → item tampil', () => {
+            const result = filterItems(items, 'salad');
+            expect(result).toHaveLength(1);
+            expect(result[0].name).toBe('Vegetable Salad');
+        });
+
+        it('WB-25: Branch match category → semua item dalam category tampil', () => {
+            const result = filterItems(items, 'vegetable');
+            expect(result).toHaveLength(2);
+        });
+    });
+
+    describe('Sort Logic', () => {
+        const items: CartItem[] = [
+            { id: 3, name: 'C', price: 30000, qty: 1 },
+            { id: 1, name: 'A', price: 10000, qty: 1 },
+            { id: 2, name: 'B', price: 20000, qty: 1 },
+        ];
+
+        it('WB-26: Branch "Lowest Price" → ascending by price', () => {
+            const result = sortItems(items, 'Lowest Price');
+            expect(result.map(i => i.price)).toEqual([10000, 20000, 30000]);
+        });
+
+        it('WB-27: Branch "Newest" → descending by id', () => {
+            const result = sortItems(items, 'Newest');
+            expect(result.map(i => i.id)).toEqual([3, 2, 1]);
+        });
+
+        it('WB-28: Branch "Relevant" (default) → tidak melakukan sort', () => {
+            const result = sortItems(items, 'Relevant');
+            expect(result.map(i => i.id)).toEqual([3, 1, 2]);
+        });
+    });
+
+    describe('Selected Total Calculation', () => {
+        const items: CartItem[] = [
+            { id: 1, name: 'A', price: 10000, qty: 2 },
+            { id: 2, name: 'B', price: 5000, qty: 1 },
+            { id: 3, name: 'C', price: 30000, qty: 1 },
+        ];
+
+        it('WB-29: Path filter by checkedItems → hanya hitung yang di-check', () => {
+            const checked = new Set([1, 3]);
+            expect(calculateSelectedTotal(items, checked)).toBe(50000);
+        });
+
+        it('WB-30: Path tidak ada selection → total = 0', () => {
+            expect(calculateSelectedTotal(items, new Set())).toBe(0);
+        });
+    });
 });
