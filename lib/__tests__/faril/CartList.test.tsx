@@ -1,173 +1,184 @@
+/**
+ * CART LIST - BLACK-BOX & WHITE-BOX TESTING
+ * Coverage: BB-13, BB-14, BB-15, BB-16, BB-17, WB-16 sampai WB-23
+ */
+
 import '@testing-library/jest-dom';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import CartItemList from '@/app/(main)/cart/_components/CartList';
 
 jest.mock('next/image', () => ({
     __esModule: true,
-    default: (props: any) => {
-        return <img {...props} />;
-    },
+    default: (props: any) => <img {...props} />,
 }));
 
-describe('CartItemList Component', () => {
-    const mockItems = [
-        { id: 1, name: 'Vegetable Salad', price: 220000, stock: 54, qty: 1, image: '', category: 'Vegetables', cartId: 1, productId: 1 },
-        { id: 2, name: 'Organic Tomato', price: 45000, stock: 30, qty: 2, image: '', category: 'Vegetables', cartId: 1, productId: 2 }
-    ];
+const mockItems = [
+    { id: 1, name: 'Vegetable Salad', price: 220000, stock: 54, qty: 1, image: '', category: 'Vegetables', cartId: 1, productId: 1 },
+    { id: 2, name: 'Organic Tomato', price: 45000, stock: 30, qty: 2, image: '', category: 'Vegetables', cartId: 1, productId: 2 },
+];
 
+describe('CartItemList Component', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        global.fetch = jest.fn();
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve({ success: true }),
+        });
     });
 
-    describe('Empty State', () => {
-        it('1. harus menampilkan pesan kosong jika cart kosong', () => {
+    describe('Black-Box: Cart Display', () => {
+        it('BB-15: Cart kosong → tampil pesan "Cart is empty"', () => {
             render(<CartItemList items={[]} />);
             expect(screen.getByText(/Cart is empty/i)).toBeInTheDocument();
         });
 
-        it('2. pesan empty harus visible dan jelas', () => {
-            render(<CartItemList items={[]} />);
-            const emptyMsg = screen.getByText(/Cart is empty/i);
-            expect(emptyMsg).toBeVisible();
-        });
-    });
-
-    describe('Display Product Info', () => {
-        it('3. harus menampilkan nama produk dari props', () => {
+        it('BB-16: Tampilan harga produk dalam format Rupiah', () => {
             render(<CartItemList items={mockItems} />);
-            expect(screen.getByText('Vegetable Salad')).toBeInTheDocument();
-            expect(screen.getByText('Organic Tomato')).toBeInTheDocument();
+            const rupiahTexts = screen.getAllByText(/Rp\s?\d{1,3}(\.\d{3})*/);
+            expect(rupiahTexts.length).toBeGreaterThan(0);
         });
 
-        it('4. harus menampilkan harga dalam format Rupiah', () => {
-            render(<CartItemList items={mockItems} />);
-            const rupiah = screen.queryAllByText(/Rp/);
-            expect(rupiah.length).toBeGreaterThan(0);
-        });
-
-        it('5. harus render multiple items tanpa error', () => {
+        it('BB-15b: Render multiple items dengan nama produk benar', () => {
             render(<CartItemList items={mockItems} />);
             expect(screen.getByText('Vegetable Salad')).toBeInTheDocument();
             expect(screen.getByText('Organic Tomato')).toBeInTheDocument();
         });
     });
 
-    describe('Checkbox Controls', () => {
-        it('6. harus render checkbox untuk items', () => {
-            const { container } = render(<CartItemList items={mockItems} checkedItems={new Set()} />);
+    describe('Black-Box: Checkbox Selection', () => {
+        it('BB-17: Setiap item punya checkbox untuk select', () => {
+            const { container } = render(
+                <CartItemList items={mockItems} checkedItems={new Set()} />
+            );
             const checkboxes = container.querySelectorAll('input[type="checkbox"]');
-            expect(checkboxes.length).toBeGreaterThan(0);
-        });
-
-        it('7. checkbox harus tidak disabled', () => {
-            const { container } = render(<CartItemList items={mockItems} checkedItems={new Set()} />);
-            const checkboxes = container.querySelectorAll('input[type="checkbox"]');
-            checkboxes.forEach(cb => {
-                expect((cb as HTMLInputElement).disabled).toBe(false);
-            });
-        });
-
-        it('8. setiap item punya checkbox tersendiri', () => {
-            const { container } = render(<CartItemList items={mockItems} checkedItems={new Set()} />);
-            const checkboxes = container.querySelectorAll('input[type="checkbox"]');
-            // Minimal ada 2 checkbox (Choose All + items)
-            expect(checkboxes.length).toBeGreaterThanOrEqual(2);
+            expect(checkboxes.length).toBeGreaterThanOrEqual(mockItems.length + 1);
         });
     });
 
-    describe('Quantity Control', () => {
-        it('9. harus ada tombol increment (+)', () => {
-            render(<CartItemList items={mockItems} />);
-            const plusButtons = screen.getAllByText('+');
-            expect(plusButtons.length).toBeGreaterThan(0);
-        });
-
-        it('10. harus ada tombol decrement (-)', () => {
-            render(<CartItemList items={mockItems} />);
-            const minusButtons = screen.getAllByText('-');
-            expect(minusButtons.length).toBeGreaterThan(0);
-        });
-
-        it('11. quantity harus valid (>= 1)', () => {
-            mockItems.forEach(item => {
-                expect(item.qty).toBeGreaterThanOrEqual(1);
-            });
-        });
-
-        it('12. quantity tidak boleh > stock', () => {
-            mockItems.forEach(item => {
-                expect(item.qty).toBeLessThanOrEqual(item.stock);
-            });
-        });
-    });
-
-    describe('Delete Controls', () => {
-        it('13. Delete All button harus disabled tanpa selection', () => {
+    describe('Black-Box: Delete All Button', () => {
+        it('BB-13: Delete All disabled tanpa selection', () => {
             render(<CartItemList items={mockItems} checkedItems={new Set()} />);
-            const deleteBtn = screen.getByText(/Delete All/i);
-            expect(deleteBtn).toBeDisabled();
+            expect(screen.getByText(/Delete All/i)).toBeDisabled();
         });
 
-        it('14. Delete All button harus enabled dengan selection', () => {
+        it('BB-14: Delete All enabled dengan minimal 1 selection', () => {
+            render(<CartItemList items={mockItems} checkedItems={new Set([1])} />);
+            expect(screen.getByText(/Delete All/i)).not.toBeDisabled();
+        });
+    });
+
+    describe('White-Box: handleSelectAll Branches', () => {
+        it('WB-16: Branch semua sudah terselect → clear semua selection', () => {
+            const onCheckedChange = jest.fn();
+            render(
+                <CartItemList
+                    items={mockItems}
+                    checkedItems={new Set([1, 2])}
+                    onCheckedChange={onCheckedChange}
+                />
+            );
+            fireEvent.click(screen.getByLabelText(/Choose All/i));
+            expect(onCheckedChange).toHaveBeenCalledWith(new Set());
+        });
+
+        it('WB-17: Branch belum semua terselect → select semua item', () => {
+            const onCheckedChange = jest.fn();
             render(
                 <CartItemList
                     items={mockItems}
                     checkedItems={new Set([1])}
+                    onCheckedChange={onCheckedChange}
                 />
             );
-            const deleteBtn = screen.getByText(/Delete All/i);
-            expect(deleteBtn).not.toBeDisabled();
-        });
-
-        it('15. harus ada button untuk delete tiap item', () => {
-            const { container } = render(<CartItemList items={mockItems} />);
-            const buttons = container.querySelectorAll('button');
-            expect(buttons.length).toBeGreaterThan(0);
-        });
-
-        it('16. component render dengan delete callback', () => {
-            const mockDelete = jest.fn();
-            render(
-                <CartItemList
-                    items={mockItems}
-                    onCartUpdate={mockDelete}
-                />
-            );
-            expect(screen.getByText('Vegetable Salad')).toBeInTheDocument();
-        });
-
-        it('17. component render dengan items change callback', () => {
-            const mockChange = jest.fn();
-            render(
-                <CartItemList
-                    items={mockItems}
-                    onItemsChange={mockChange}
-                />
-            );
-            expect(screen.getByText('Vegetable Salad')).toBeInTheDocument();
+            fireEvent.click(screen.getByLabelText(/Choose All/i));
+            expect(onCheckedChange).toHaveBeenCalledWith(new Set([1, 2]));
         });
     });
 
-    describe('Component Props', () => {
-        it('18. component accept all required props', () => {
-            const { container } = render(
+    describe('White-Box: handleToggleCheckbox Branches', () => {
+        it('WB-18: Branch item belum di-check → tambah ke set', () => {
+            const onCheckedChange = jest.fn();
+            render(
                 <CartItemList
                     items={mockItems}
                     checkedItems={new Set()}
-                    onCartUpdate={jest.fn()}
-                    onCheckedChange={jest.fn()}
-                    onItemsChange={jest.fn()}
+                    onCheckedChange={onCheckedChange}
                 />
             );
-            expect(container).toBeInTheDocument();
+            fireEvent.click(screen.getByLabelText(/Select Vegetable Salad/i));
+            expect(onCheckedChange).toHaveBeenCalledWith(new Set([1]));
         });
 
-        it('19. component render dengan minimal props', () => {
-            const { container } = render(
-                <CartItemList items={mockItems} />
+        it('WB-19: Branch item sudah di-check → remove dari set', () => {
+            const onCheckedChange = jest.fn();
+            render(
+                <CartItemList
+                    items={mockItems}
+                    checkedItems={new Set([1])}
+                    onCheckedChange={onCheckedChange}
+                />
             );
-            expect(container).toBeInTheDocument();
+            fireEvent.click(screen.getByLabelText(/Select Vegetable Salad/i));
+            expect(onCheckedChange).toHaveBeenCalledWith(new Set());
+        });
+    });
+
+    describe('White-Box: handleUpdateQuantity Logic', () => {
+        it('WB-20: Branch newQty < 1 → early return, tidak update', async () => {
+            render(<CartItemList items={[{ ...mockItems[0], qty: 1 }]} />);
+            fireEvent.click(screen.getByLabelText(/Kurangi kuantitas/i));
+            await waitFor(() => {
+                expect(global.fetch).not.toHaveBeenCalled();
+            });
+        });
+
+        it('WB-21: Path debounce - klik increment sekali → update qty di state', async () => {
+            const onItemsChange = jest.fn();
+            render(
+                <CartItemList
+                    items={[{ ...mockItems[0], qty: 1 }]}
+                    onItemsChange={onItemsChange}
+                />
+            );
+            fireEvent.click(screen.getByLabelText(/Tambah kuantitas/i));
+            await waitFor(() => {
+                expect(onItemsChange).toHaveBeenCalled();
+            });
+        });
+    });
+
+    describe('White-Box: Optimistic Update Logic', () => {
+        it('WB-22: Path API success → state permanen, tidak rollback', async () => {
+            (global.fetch as jest.Mock).mockResolvedValueOnce({
+                ok: true,
+                json: () => Promise.resolve({ success: true }),
+            });
+
+            render(<CartItemList items={mockItems} />);
+            const deleteButtons = screen.getAllByLabelText(/Hapus dari keranjang/i);
+            fireEvent.click(deleteButtons[0]);
+
+            await waitFor(() => {
+                expect(screen.queryByText('Vegetable Salad')).not.toBeInTheDocument();
+            });
+            await waitFor(() => {
+                expect(global.fetch).toHaveBeenCalled();
+            });
+        });
+
+        it('WB-23: Path API fail → rollback ke state sebelumnya', async () => {
+            (global.fetch as jest.Mock).mockResolvedValueOnce({
+                ok: false,
+                json: () => Promise.resolve({ error: 'Server error' }),
+            });
+
+            render(<CartItemList items={mockItems} />);
+            const deleteButtons = screen.getAllByLabelText(/Hapus dari keranjang/i);
+            fireEvent.click(deleteButtons[0]);
+
+            await waitFor(() => {
+                expect(screen.getByText('Vegetable Salad')).toBeInTheDocument();
+            });
         });
     });
 });

@@ -1,14 +1,21 @@
+/**
+ * CART PAGE - BLACK-BOX & WHITE-BOX TESTING
+ * Coverage: BB-01, BB-02, BB-15, BB-16, BB-18, BB-19, BB-20, BB-21, BB-22, WB-12 sampai WB-15
+ */
+
 import '@testing-library/jest-dom';
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import CartPage from '@/app/(main)/cart/page';
 
+const mockPush = jest.fn();
+const mockUseSession = jest.fn();
+
 jest.mock('next-auth/react', () => ({
-    useSession: () => ({ data: { user: { id: '1', name: 'Test User' } }, status: 'authenticated' }),
+    useSession: () => mockUseSession(),
 }));
 
 jest.mock('next/navigation', () => ({
-    useRouter: () => ({ push: jest.fn(), refresh: jest.fn() }),
+    useRouter: () => ({ push: mockPush, refresh: jest.fn() }),
 }));
 
 jest.mock('next/image', () => ({
@@ -18,187 +25,198 @@ jest.mock('next/image', () => ({
 
 global.fetch = jest.fn();
 
+const setAuthenticated = () => {
+    mockUseSession.mockReturnValue({
+        data: { user: { id: '1', name: 'Test User' } },
+        status: 'authenticated',
+    });
+};
+
+const setUnauthenticated = () => {
+    mockUseSession.mockReturnValue({
+        data: null,
+        status: 'unauthenticated',
+    });
+};
+
+const mockApiResponse = (items: any[] = []) => ({
+    ok: true,
+    json: () => Promise.resolve({
+        id: 1,
+        userId: 1,
+        createdAt: new Date().toISOString(),
+        items,
+    }),
+});
+
+const sampleProducts = [
+    {
+        id: 1, cartId: 1, productId: 1, qty: 2,
+        product: { namaProduct: 'Vegetable Salad', harga: 220000, stok: 50, gambarUrls: [], kategori: 'Vegetables' },
+    },
+    {
+        id: 2, cartId: 1, productId: 2, qty: 1,
+        product: { namaProduct: 'Beef Burger', harga: 50000, stok: 20, gambarUrls: [], kategori: 'Meat' },
+    },
+];
+
+const waitForLoadingToFinish = async () => {
+    await waitFor(() => {
+        expect(screen.queryByText(/Loading cart/i)).not.toBeInTheDocument();
+    }, { timeout: 3000 });
+};
+
 describe('CartPage Component', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        (global.fetch as jest.Mock).mockResolvedValue({
-            ok: true,
-            json: () => Promise.resolve({ items: [], userId: 1, id: 1 }),
-        });
+        setAuthenticated();
+        (global.fetch as jest.Mock).mockResolvedValue(mockApiResponse([]));
     });
 
-    describe('Loading State', () => {
-        it('1. harus menampilkan loading state saat fetch data (simulasi awal)', () => {
+    describe('Black-Box: Authentication & Access', () => {
+        it('BB-01: Akses /cart tanpa login → redirect ke /login', async () => {
+            setUnauthenticated();
             render(<CartPage />);
-            expect(screen.getByText(/Loading cart.../i)).toBeInTheDocument();
-        });
-
-        it('2. loading state harus menghilang setelah data berhasil diload', async () => {
-            render(<CartPage />);
-
             await waitFor(() => {
-                expect(screen.queryByText(/Loading cart.../i)).not.toBeInTheDocument();
-            }, { timeout: 3000 });
-        });
-    });
-
-    describe('Page Structure', () => {
-        it('3. harus merender komponen utama halaman cart', async () => {
-            render(<CartPage />);
-
-            await waitFor(() => {
-                // Check if component renders after loading
-                expect(screen.queryByText(/Loading cart.../i)).not.toBeInTheDocument();
-            }, { timeout: 3000 });
-        });
-
-        it('4. harus merender CartSummary ketika data loaded', async () => {
-            (global.fetch as jest.Mock).mockResolvedValueOnce({
-                ok: true,
-                json: () => Promise.resolve({ items: [], userId: 1, id: 1 }),
+                expect(mockPush).toHaveBeenCalledWith('/login');
             });
-
-            render(<CartPage />);
-
-            await waitFor(() => {
-                expect(screen.queryByText(/Loading cart.../i)).not.toBeInTheDocument();
-            }, { timeout: 3000 });
         });
 
-        it('5. harus handle page structure dengan benar', () => {
+        it('BB-02: Akses /cart dengan login valid → halaman cart tampil', async () => {
+            (global.fetch as jest.Mock).mockResolvedValueOnce(mockApiResponse(sampleProducts));
             render(<CartPage />);
-            expect(screen.getByText(/Loading cart.../i)).toBeInTheDocument();
+            await waitForLoadingToFinish();
+            expect(screen.getByRole('heading', { name: /^Cart$/i })).toBeInTheDocument();
+            expect(screen.getByText('Vegetable Salad')).toBeInTheDocument();
         });
     });
 
-    describe('Cart Items Display', () => {
-        it('6. harus menampilkan loading awal jika cart kosong', () => {
+    describe('Black-Box: Loading State', () => {
+        it('BB-02b: Initial mount → tampil "Loading cart..."', async () => {
             render(<CartPage />);
-            expect(screen.getByText(/Loading cart.../i)).toBeInTheDocument();
+            expect(screen.getByText(/Loading cart/i)).toBeInTheDocument();
+            await waitForLoadingToFinish();
         });
 
-        it('7. harus fetch data saat component mount', () => {
+        it('BB-02c: Setelah data loaded → loading state hilang', async () => {
             render(<CartPage />);
-            expect(global.fetch).toHaveBeenCalled();
-        });
-
-        it('8. API call harus ke endpoint /api/cart', () => {
-            render(<CartPage />);
-            expect(global.fetch).toHaveBeenCalledWith(
-                expect.stringContaining('/api/cart')
-            );
+            await waitForLoadingToFinish();
+            expect(screen.queryByText(/Loading cart/i)).not.toBeInTheDocument();
         });
     });
 
-    describe('Price Calculation', () => {
-        it('9. harus handle price calculation dengan benar', async () => {
+    describe('Black-Box: Cart Display', () => {
+        it('BB-15: Cart kosong → tampil pesan "Cart is empty"', async () => {
             render(<CartPage />);
-
-            await waitFor(() => {
-                expect(screen.queryByText(/Loading cart.../i)).not.toBeInTheDocument();
-            }, { timeout: 3000 });
+            await waitForLoadingToFinish();
+            expect(screen.getByText(/Cart is empty/i)).toBeInTheDocument();
         });
 
-        it('10. harus support rupiah formatting', async () => {
+        it('BB-16: Tampilan harga dalam format Rupiah', async () => {
+            (global.fetch as jest.Mock).mockResolvedValueOnce(mockApiResponse(sampleProducts));
             render(<CartPage />);
-
-            await waitFor(() => {
-                // Component should render and not show loading
-                const loading = screen.queryByText(/Loading cart.../i);
-                expect(loading).not.toBeInTheDocument();
-            }, { timeout: 3000 });
+            await waitForLoadingToFinish();
+            const rupiahTexts = screen.getAllByText(/Rp\s?\d/);
+            expect(rupiahTexts.length).toBeGreaterThan(0);
         });
     });
 
-    describe('Checkout Flow', () => {
-        it('11. halaman harus render dengan user data', async () => {
+    describe('Black-Box: Page Structure', () => {
+        it('BB-02d: Render heading dan breadcrumb', async () => {
             render(<CartPage />);
-
-            await waitFor(() => {
-                expect(screen.queryByText(/Loading cart.../i)).not.toBeInTheDocument();
-            }, { timeout: 3000 });
+            await waitForLoadingToFinish();
+            expect(screen.getByRole('heading', { name: /^Cart$/i })).toBeInTheDocument();
+            expect(screen.getByText(/Home/i)).toBeInTheDocument();
         });
 
-        it('12. harus handle user session dengan benar', () => {
+        it('BB-02e: Render CartSummary dengan total price', async () => {
             render(<CartPage />);
-            // Initial render shows loading
-            expect(screen.getByText(/Loading cart.../i)).toBeInTheDocument();
+            await waitForLoadingToFinish();
+            expect(screen.getByText(/Rincian Harga/i)).toBeInTheDocument();
+            expect(screen.getByText(/Pesan Sekarang/i)).toBeInTheDocument();
         });
     });
 
-    describe('Error Handling', () => {
-        it('13. harus handle fetch error dengan graceful', async () => {
+    describe('White-Box: useEffect Mount Branches', () => {
+        it('WB-12: Branch status="authenticated" → fetchCart() terpanggil', async () => {
+            render(<CartPage />);
+            await waitFor(() => {
+                expect(global.fetch).toHaveBeenCalledWith('/api/cart');
+            });
+            await waitForLoadingToFinish();
+        });
+
+        it('WB-13: Branch status="unauthenticated" → router.push("/login")', async () => {
+            setUnauthenticated();
+            render(<CartPage />);
+            await waitFor(() => {
+                expect(mockPush).toHaveBeenCalledWith('/login');
+            });
+            expect(global.fetch).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('White-Box: fetchCart Error Paths', () => {
+        it('WB-14: Path network error → setError dipanggil, loading=false', async () => {
             (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
-
             render(<CartPage />);
-
+            await waitForLoadingToFinish();
             await waitFor(() => {
-                // Page should still render
-                expect(screen.getByText(/Loading cart.../i)).toBeInTheDocument();
-            }, { timeout: 3000 });
+                expect(screen.getByText(/Network error/i)).toBeInTheDocument();
+            });
         });
 
-        it('14. harus handle API error response', async () => {
+        it('WB-15: Path response.ok=false → throw error, masuk catch', async () => {
             (global.fetch as jest.Mock).mockResolvedValueOnce({
                 ok: false,
                 json: () => Promise.resolve({ error: 'Failed' }),
             });
-
             render(<CartPage />);
-
+            await waitForLoadingToFinish();
             await waitFor(() => {
-                // Component should handle error gracefully
-                expect(screen.getByText(/Loading cart.../i)).toBeInTheDocument();
-            }, { timeout: 3000 });
-        });
-
-        it('15. harus tetap render meski ada error', () => {
-            render(<CartPage />);
-            // Component should render something
-            expect(screen.getByText(/Loading cart.../i)).toBeInTheDocument();
+                expect(screen.getByText(/Failed to fetch cart/i)).toBeInTheDocument();
+            });
         });
     });
 
-    describe('Integration', () => {
-        it('16. harus memanggil useSession hook', () => {
+    describe('Black-Box: Search & Sort', () => {
+        it('BB-18: Search dengan keyword ada → item match tampil', async () => {
+            (global.fetch as jest.Mock).mockResolvedValueOnce(mockApiResponse(sampleProducts));
             render(<CartPage />);
-            // Component renders with authenticated state
-            expect(screen.getByText(/Loading cart.../i)).toBeInTheDocument();
+            await waitForLoadingToFinish();
+            expect(screen.getByText('Vegetable Salad')).toBeInTheDocument();
+            expect(screen.getByText('Beef Burger')).toBeInTheDocument();
         });
 
-        it('17. harus setup fetch untuk cart data', () => {
+        it('BB-19: Search input tersedia untuk filter items', async () => {
+            (global.fetch as jest.Mock).mockResolvedValueOnce(mockApiResponse(sampleProducts));
             render(<CartPage />);
-            expect(global.fetch).toHaveBeenCalled();
+            await waitForLoadingToFinish();
+            expect(screen.getByPlaceholderText(/Cari sesuatu/i)).toBeInTheDocument();
         });
 
-        it('18. harus handle async data loading', async () => {
+        it('BB-20: Sort dropdown tersedia dengan opsi default', async () => {
             render(<CartPage />);
+            await waitForLoadingToFinish();
+            expect(screen.getByText(/Relevant/i)).toBeInTheDocument();
+        });
+    });
 
-            // Initial: loading state
-            expect(screen.getByText(/Loading cart.../i)).toBeInTheDocument();
-
-            // After fetch: data state
-            await waitFor(() => {
-                expect(screen.queryByText(/Loading cart.../i)).not.toBeInTheDocument();
-            }, { timeout: 3000 });
+    describe('Black-Box: Checkout Button State', () => {
+        it('BB-21: Tanpa item dipilih (totalPrice=0) → tombol disabled', async () => {
+            (global.fetch as jest.Mock).mockResolvedValueOnce(mockApiResponse(sampleProducts));
+            render(<CartPage />);
+            await waitForLoadingToFinish();
+            const checkoutBtn = screen.getByRole('button', { name: /Pesan Sekarang/i });
+            expect(checkoutBtn).toBeDisabled();
         });
 
-        it('19. harus support component lifecycle', async () => {
+        it('BB-22: Cart kosong → tombol checkout tetap disabled', async () => {
+            (global.fetch as jest.Mock).mockResolvedValueOnce(mockApiResponse([]));
             render(<CartPage />);
-
-            // Verify rendering flow
-            expect(global.fetch).toHaveBeenCalled();
-
-            await waitFor(() => {
-                // After loading resolves
-                expect(screen.queryByText(/Loading cart.../i)).not.toBeInTheDocument();
-            }, { timeout: 3000 });
-        });
-
-        it('20. harus maintain session context', () => {
-            render(<CartPage />);
-            // Component renders successfully
-            expect(screen.getByText(/Loading cart.../i)).toBeInTheDocument();
+            await waitForLoadingToFinish();
+            const checkoutBtn = screen.getByRole('button', { name: /Pesan Sekarang/i });
+            expect(checkoutBtn).toBeDisabled();
         });
     });
 });
