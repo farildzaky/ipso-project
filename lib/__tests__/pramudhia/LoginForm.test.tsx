@@ -1,7 +1,7 @@
 // __tests__/pramudhia/LoginForm.test.tsx
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import LoginForm from "@/app/(auth)/_components/auth/LoginForm";
+import LoginForm from "@/app/(auth)/_components/LoginForm";
 
 jest.mock("next-auth/react", () => ({
   signIn: jest.fn(),
