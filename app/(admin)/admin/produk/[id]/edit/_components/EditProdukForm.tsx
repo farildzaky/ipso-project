@@ -12,7 +12,7 @@ type Product = {
   deskripsi: string;
   kategori: string;
   tenant: string;
-  gambarUrl: string[];
+  gambarUrls: string[];
 };
 
 type ImageEntry = { id: string; preview: string; url: string };
@@ -26,7 +26,7 @@ export default function EditProdukForm({ produk }: { produk: Product }) {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [images, setImages] = useState<ImageEntry[]>(
-    produk.gambarUrl.map((url) => ({ id: url, preview: url, url })),
+    produk.gambarUrls.map((url: string) => ({ id: url, preview: url, url })),
   );
   const [error, setError] = useState<string | null>(null);
 
@@ -76,7 +76,7 @@ export default function EditProdukForm({ produk }: { produk: Product }) {
         deskripsi: fd.get("deskripsi") || null,
         kategori: fd.get("kategori"),
         tenant: fd.get("tenant"),
-        gambarUrl: images.map((img) => img.url),
+        gambarUrls: images.map((img) => img.url),
       }),
     });
 

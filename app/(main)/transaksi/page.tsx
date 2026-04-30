@@ -99,11 +99,11 @@ export default async function TransaksiPage() {
                       <div className="flex gap-4">
                         <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 relative border border-gray-200">
                           {/* Menampilkan Gambar Asli */}
-                          {item.product?.gambarUrl ? (
-                            <img 
-                              src={item.product.gambarUrl} 
-                              alt={item.product.namaProduct} 
-                              className="w-full h-full object-cover" 
+                          {item.product?.gambarUrls?.[0] ? (
+                            <img
+                              src={item.product.gambarUrls[0]}
+                              alt={item.product.namaProduct}
+                              className="w-full h-full object-cover"
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-2xl">🍽️</div>

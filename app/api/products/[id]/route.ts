@@ -9,7 +9,7 @@ const updateSchema = z.object({
   deskripsi: z.string().min(1),
   kategori: z.string().min(1),
   tenant: z.string().min(1),
-  gambarUrl: z.array(z.string()).min(1, "Minimal 1 foto produk"),
+  gambarUrls: z.array(z.string()).min(1, "Minimal 1 foto produk"),
 });
 
 export async function PUT(

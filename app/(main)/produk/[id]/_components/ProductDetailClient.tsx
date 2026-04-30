@@ -11,7 +11,7 @@ type Produk = {
   stok: number;
   deskripsi: string;
   tenant: string;
-  gambarUrl: string; // UBAH: dari string[] menjadi string
+  gambarUrls: string[];
 };
 
 type SimilarItem = {
@@ -40,7 +40,7 @@ export default function ProductDetailClient({
   const { data: session } = useSession();
   
   // Perbaikan: Langsung ambil produk.gambarUrl karena sekarang tipe datanya String
-  const [mainImage, setMainImage] = useState(produk.gambarUrl || null);
+  const [mainImage, setMainImage] = useState(produk.gambarUrls[0] || null);
   const [qty, setQty] = useState(1);
   const [offset, setOffset] = useState(0);
   const [isLoadingCart, setIsLoadingCart] = useState(false);
