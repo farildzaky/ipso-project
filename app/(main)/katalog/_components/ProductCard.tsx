@@ -7,7 +7,7 @@ type Props = {
   namaProduct: string;
   harga: string;
   tenant: string;
-  gambarUrl: string | null;
+  gambarUrls: string[];
 };
 
 export default function ProductCard({
@@ -15,7 +15,7 @@ export default function ProductCard({
   namaProduct,
   harga,
   tenant,
-  gambarUrl,
+  gambarUrls,
 }: Props) {
   const router = useRouter();
 
@@ -25,9 +25,9 @@ export default function ProductCard({
       onClick={() => router.push(`/produk/${id}`)}
     >
       <div className="w-full aspect-[4/3] rounded-xl overflow-hidden  bg-gray-100 shrink-0">
-        {gambarUrl ? (
+        {gambarUrls.length > 0 ? (
           <img
-            src={gambarUrl}
+            src={gambarUrls[0]}
             alt={namaProduct}
             className="w-full h-full object-cover"
           />

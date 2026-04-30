@@ -53,7 +53,7 @@ export default function CartPage() {
                     price: Number(item.product.harga),
                     stock: item.product.stok,
                     qty: item.qty,
-                    image: item.product.gambarUrl?.[0] || "",
+                    image: item.product.gambarUrls?.[0] || "",
                     category: item.product.kategori || "Product",
                     cartId: item.cartId,
                     productId: item.productId,

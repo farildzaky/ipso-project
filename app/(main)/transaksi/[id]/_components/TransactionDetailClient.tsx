@@ -70,8 +70,8 @@ export default function TransactionDetailClient({ transaksi }: { transaksi: any 
                 <div key={item.id} className="flex gap-4 items-center justify-between border-b border-gray-100 pb-4 last:border-b-0 last:pb-0">
                   <div className="flex gap-4 items-center">
                     <div className="w-16 h-16 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 relative border border-gray-200">
-                      {item.product?.gambarUrl ? (
-                        <img src={item.product.gambarUrl} alt={item.product.namaProduct} className="w-full h-full object-cover" />
+                      {item.product?.gambarUrls?.[0] ? (
+                        <img src={item.product.gambarUrls[0]} alt={item.product.namaProduct} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">🍽️</div>
                       )}

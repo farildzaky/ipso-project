@@ -36,7 +36,7 @@ export default async function KatalogPage({
         namaProduct: true,
         harga: true,
         tenant: true,
-        gambarUrl: true,
+        gambarUrls: true,
       },
     }),
     prisma.product.count({ where }),
@@ -75,7 +75,7 @@ export default async function KatalogPage({
               namaProduct={p.namaProduct}
               harga={p.harga.toString()}
               tenant={p.tenant}
-              gambarUrl={p.gambarUrl ?? null}
+              gambarUrls={p.gambarUrls}
             />
           ))}
         </div>
